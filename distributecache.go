@@ -1,0 +1,5 @@
+package distributecache
+
+func NewStroe() {
+
+}

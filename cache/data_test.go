@@ -12,4 +12,5 @@ func TestCodec(t *testing.T) {
 	d.WriteToFile("test", 345, "", "create")
 	m, _ := d.RestoreFromFile()
 	log.Printf("map: %v", m)
+	d.Close()
 }

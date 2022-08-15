@@ -13,13 +13,13 @@ import (
 func TestCache(t *testing.T) {
 	a := assert.New(t)
 	s := cache.NewStroe()
-	for i := 0; i < 3; i++ {
-		s.Add(cache.CacheKey(fmt.Sprintf("test%d", i)), i)
+	for i := 0; i < 103; i++ {
+		s.Add(fmt.Sprintf("test%d", i), i)
 	}
-	val, _ := s.Get("test2")
-	a.Equal(val, 2)
+	val, _ := s.Get("test1")
+	a.Equal(val, 1)
 	// time.Sleep(time.Second * 3)
-	// s.Destroy()
+	s.Destroy()
 }
 func TestDestroy(t *testing.T) {
 	s := cache.NewStroe()

@@ -35,7 +35,10 @@ func NewStroe() *CacheStore {
 	}
 	return cs
 }
-func (cs *CacheStore) Add(key CacheKey, value any) error {
+func (cs *CacheStore) Add(key string, value any) error {
+	return cs.add(CacheKey(key), value)
+}
+func (cs *CacheStore) add(key CacheKey, value any) error {
 	cs.mux.Lock()
 	defer cs.mux.Unlock()
 	if cs.l == nil {
@@ -70,6 +73,8 @@ func (cs *CacheStore) Get(key CacheKey) (v any, err error) {
 		log.Printf("get from cache error: %v", err)
 	}
 	if ret, ok := cs.m[key]; ok {
+		cs.l.Remove(string(key))
+		cs.l.Add(string(key), v)
 		return ret.Value(), nil
 	} else {
 		return nil, fmt.Errorf("%s not found", key)

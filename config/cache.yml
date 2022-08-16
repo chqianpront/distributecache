@@ -1,0 +1,6 @@
+lrusize: 50
+isdistributed: true
+addr: 0.0.0.0
+port: 8086
+platformaddr: 0.0.0.0
+platformport: 8087

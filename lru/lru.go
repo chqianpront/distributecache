@@ -55,9 +55,7 @@ func (lru *Lru) Add(key, v any) error {
 	if lru.tail == nil {
 		lru.tail = elm
 	}
-	if lru.Len() > lru.size {
-		lru.removeOverSize()
-	}
+	lru.removeOverSize()
 	return nil
 }
 func (lru *Lru) Get(key any) (v any, err error) {
@@ -67,12 +65,17 @@ func (lru *Lru) Get(key any) (v any, err error) {
 		return nil, err
 	}
 	if elm, ok := lru.m[kHash]; ok {
+		lru.l.MoveToFront(elm)
 		return elm.Value.(Node).value, nil
 	}
 	return nil, fmt.Errorf("%v not found", key)
 }
 func (lru *Lru) Remove(key any) {
-	delete(lru.m, key.(string))
+	kHash, _ := lru.keyHash(key)
+	if n, ok := lru.m[kHash]; ok {
+		lru.l.Remove(n)
+	}
+	delete(lru.m, kHash)
 }
 func (lru *Lru) keyHash(key any) (string, error) {
 	keystr := key.(string)
@@ -85,6 +88,6 @@ func (lru *Lru) removeOverSize() {
 	for lru.Len() > lru.size {
 		tmp := lru.tail
 		lru.tail = lru.tail.Prev()
-		lru.l.Remove(tmp)
+		lru.Remove(tmp.Value.(Node).key)
 	}
 }

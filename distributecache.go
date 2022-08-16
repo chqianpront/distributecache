@@ -1,5 +1,0 @@
-package distributecache
-
-func NewStroe() {
-
-}

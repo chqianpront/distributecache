@@ -46,12 +46,12 @@ func (cs *CacheStore) add(key CacheKey, value any) error {
 	}
 	err := cs.l.Add(string(key), value)
 	if err != nil {
-		log.Printf("add to store failed")
+		log.Printf("add to store failed\n")
 		return err
 	}
 	meta, err := cs.ds.WriteToFile(string(key), value, "", "create")
 	if err != nil {
-		log.Printf("add to store failed")
+		log.Printf("add to store failed\n")
 		return err
 	}
 	metaStr, _ := json.Marshal(meta)
@@ -63,54 +63,54 @@ func (cs *CacheStore) add(key CacheKey, value any) error {
 	cs.m[key] = v
 	return nil
 }
-func (cs *CacheStore) Get(key CacheKey) (v any, err error) {
+func (cs *CacheStore) Get(key string) (v any, err error) {
 	var ret any
 	if cs.l != nil {
-		ret, err = cs.l.Get(string(key))
+		ret, err = cs.l.Get(key)
 		if err == nil {
 			return ret, nil
 		}
-		log.Printf("get from cache error: %v", err)
+		log.Printf("get from cache error: %v\n", err)
 	}
-	if ret, ok := cs.m[key]; ok {
-		cs.l.Remove(string(key))
-		cs.l.Add(string(key), v)
+	if ret, ok := cs.m[CacheKey(key)]; ok {
+		cs.l.Remove(key)
+		cs.l.Add(key, v)
 		return ret.Value(), nil
 	} else {
 		return nil, fmt.Errorf("%s not found", key)
 	}
 }
-func (cs *CacheStore) Put(key CacheKey, value any) error {
+func (cs *CacheStore) Put(key string, value any) error {
 	cs.mux.Lock()
 	defer cs.mux.Unlock()
 	if cs.l == nil {
 		cs.l = lru.Newlru()
 	}
-	cs.l.Remove(string(key))
-	cs.l.Add(string(key), value)
-	v := cs.m[key]
+	cs.l.Remove(key)
+	cs.l.Add(key, value)
+	v := cs.m[CacheKey(key)]
 	metaStr, _ := json.Marshal(v.MetaData())
 	meta, err := cs.ds.WriteToFile(string(key), value, string(metaStr), "update")
 	if err != nil {
-		log.Printf("error writing update meta data: %v", err)
+		log.Printf("error writing update meta data: %v\n", err)
 		return err
 	}
 	metaStr1, _ := json.Marshal(meta)
 	newV := CacheValue{
 		meta:  string(metaStr1),
-		key:   key,
+		key:   CacheKey(key),
 		value: value,
 	}
-	cs.m[key] = newV
+	cs.m[CacheKey(key)] = newV
 	return nil
 }
-func (cs *CacheStore) Delete(key CacheKey) {
+func (cs *CacheStore) Delete(key string) {
 	cs.mux.Lock()
 	defer cs.mux.Unlock()
 	if cs.l != nil {
-		cs.l.Remove(string(key))
+		cs.l.Remove(key)
 	}
-	delete(cs.m, key)
+	delete(cs.m, CacheKey(key))
 }
 func (cs *CacheStore) Destroy() {
 	cs.ds.Close()

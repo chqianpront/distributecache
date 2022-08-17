@@ -21,7 +21,7 @@ var config *Config
 
 func init() {
 	// baseDir, _ := os.Getwd()
-	baseDir := "/home/chen/work/ccbft/distributecache"
+	baseDir := "C:/work/chen/code/distribute_cache"
 	ymlFilePath := fmt.Sprintf("%s/%s", baseDir, "config/cache.yml")
 	rb, _ := os.ReadFile(ymlFilePath)
 	config = new(Config)

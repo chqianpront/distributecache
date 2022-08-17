@@ -37,30 +37,35 @@ func StartServer() {
 func handleConn(connection *Connection) {
 	for {
 		connection.SetReadDeadline(time.Now().Add(time.Second * 60))
-		buf := connection.ReadFromLc()
-		cmd, err := ParseCommand(buf)
-		log.Printf("cmd: %v\n", cmd)
-		if err != nil {
-			log.Printf("error parsing command: %v\n", err)
-			continue
+		connection.ReadFromLc()
+		for buf := range connection.DataChannel {
+			if buf == nil {
+				break
+			}
+			cmd, err := ParseCommand(buf)
+			// log.Printf("cmd: %v\n", cmd)
+			if err != nil {
+				log.Printf("error parsing command: %v\n", err)
+				continue
+			}
+			var bs []byte
+			switch cmd.Type {
+			case Add:
+				store.Add(cmd.Key, cmd.Value)
+				bs, _ = json.Marshal(NewCommand(Ok, "", nil))
+			case Update:
+				store.Put(cmd.Key, cmd.Value)
+				bs, _ = json.Marshal(NewCommand(Ok, "", nil))
+			case Delete:
+				store.Delete(cmd.Key)
+				bs, _ = json.Marshal(NewCommand(Ok, "", nil))
+			case Get:
+				gval, _ := store.Get(cmd.Key)
+				bs, _ = json.Marshal(NewCommand(GetOk, cmd.Key, gval))
+			case Ping:
+				bs, _ = json.Marshal(NewCommand(Pong, "", nil))
+			}
+			connection.WriteAdapter(bs)
 		}
-		var bs []byte
-		switch cmd.Type {
-		case Add:
-			store.Add(cmd.Key, cmd.Value)
-			bs, _ = json.Marshal(NewCommand(Ok, "", nil))
-		case Update:
-			store.Put(cmd.Key, cmd.Value)
-			bs, _ = json.Marshal(NewCommand(Ok, "", nil))
-		case Delete:
-			store.Delete(cmd.Key)
-			bs, _ = json.Marshal(NewCommand(Ok, "", nil))
-		case Get:
-			gval, _ := store.Get(cmd.Key)
-			bs, _ = json.Marshal(NewCommand(GetOk, cmd.Key, gval))
-		case Ping:
-			bs, _ = json.Marshal(NewCommand(Pong, "", nil))
-		}
-		connection.WriteAdapter(bs)
 	}
 }

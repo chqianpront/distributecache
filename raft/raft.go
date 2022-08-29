@@ -13,8 +13,8 @@ type Raft struct {
 	stopCh         chan bool
 	stoped         bool
 	term           TermId
-	replications   []Peer
-	peers          []Peer
+	replications   []Server
+	peers          []Server
 	leaderId       ServerId
 	lastCommitId   CommitId
 	commits        []Commit
